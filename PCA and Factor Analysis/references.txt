@@ -1,0 +1,4 @@
+http://www.sthda.com/english/wiki/principal-component-analysis-in-r-prcomp-vs-princomp-r-software-and-data-mining
+https://tgmstat.wordpress.com/2013/11/28/computing-and-visualizing-pca-in-r/
+https://www.analyticsvidhya.com/blog/2016/03/practical-guide-principal-component-analysis-python/
+http://stats.stackexchange.com/questions/137240/how-to-interpret-this-pca-biplot
