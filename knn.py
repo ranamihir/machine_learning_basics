@@ -45,15 +45,3 @@ knn.fit(X_train, y_train)
 knn.predict(X_train)
 
 knn.predict(X_test)
-
-a = [1,2,3,4,5,6]
-a.pop()
-a.pop(0)
-a.pop(1)
-a.pop(-1)
-from collections import deque
-
-a = deque([1,2,3,4,5,6])
-a.append(7)
-a.pop()
-a.popleft()
