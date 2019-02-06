@@ -71,6 +71,7 @@ class KMeans():
 
     def _check_init(self):
         valid_inits = ['random', 'kmeans++']
+        # TODO: kmeans++
         if not self.init in valid_inits:
             raise ValueError('Param "init" must be in "{}"'.format(valid_inits))
 
