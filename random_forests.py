@@ -7,7 +7,7 @@ from decision_trees import ClassificationTree, RegressionTree
 import matplotlib.pyplot as plt
 
 
-class RandomForestClassifier():
+class RandomForest():
     '''
     Random Forest Regressor/Classifier class
     :method fit: fitting model
@@ -110,8 +110,8 @@ def main():
                               ['n_estimators = {}'.format(n) for n in [1, 5, 10, 20, 50, 100]]):
 
         # Random Forest Classifier
-        rf = RandomForestClassifier(n_estimators=n_est, max_features='auto', \
-                                    criterion='entropy', estimator='mode', max_depth=5)
+        rf = RandomForest(n_estimators=n_est, max_features='auto', \
+                          criterion='entropy', estimator='mode', max_depth=5)
         rf.fit(x_train, y_train.ravel())
 
         Z = (rf.predict(np.c_[xx.ravel(), yy.ravel()]) > 0).astype(int)
@@ -141,8 +141,8 @@ def main():
                               ['n_estimators = {}'.format(n) for n in [1, 5, 10, 20, 50, 100]]):
 
         # Random Forest Regressor
-        rf = RandomForestClassifier(n_estimators=n_est, max_features='auto', \
-                                    criterion='mse', estimator='mean', max_depth=2)
+        rf = RandomForest(n_estimators=n_est, max_features='auto', \
+                          criterion='mse', estimator='mean', max_depth=2)
         rf.fit(x_krr_train, y_krr_train.ravel())
 
         y_predict = rf.predict(x_range)
