@@ -202,7 +202,7 @@ class DecisionTree():
             max_features = np.round(np.sqrt(num_features)).astype(int)
         elif self.max_features == 'log2':
             max_features = np.round(np.log2(num_features)).astype(int)
-        elif not isinstance(self.max_features, int):
+        elif self.max_features is None:
             max_features = num_features
         return min(max_features, num_features)
 
