@@ -1,7 +1,6 @@
 import numpy as np
 from collections import Counter
 from itertools import product
-from copy import deepcopy
 import matplotlib.pyplot as plt
 
 
@@ -87,8 +86,6 @@ class DecisionTree():
         if (min(left_partition.shape[0], right_partition.shape[0]) < self.min_samples_leaf) or \
             (total_size < self.min_samples_split)  or (self.depth >= self.max_depth):
             self.is_leaf = True
-
-        if self.is_leaf:
             self.value = leaf_value_estimator(y)
             return self
 
@@ -99,13 +96,13 @@ class DecisionTree():
         # Process left child
         self.left = DecisionTree(self.criterion, self.leaf_value_estimator, \
                                   self.depth+1, self.min_samples_split, self.min_samples_leaf, self.max_depth)
-        self.left.fit(X[left_partition.astype(int)], y[left_partition.astype(int)])
+        self.left.fit(X[left_partition], y[left_partition])
 
 
         # Process right child
         self.right = DecisionTree(self.criterion, self.leaf_value_estimator, \
                                    self.depth+1, self.min_samples_split, self.min_samples_leaf, self.max_depth)
-        self.right.fit(X[right_partition.astype(int)], y[right_partition.astype(int)])
+        self.right.fit(X[right_partition], y[right_partition])
 
         return self
 
@@ -126,8 +123,8 @@ class DecisionTree():
         return self.right._predict_instance(x)
 
     def _test_split(self, index, value, X):
-        left = np.where(X[:,index] <= value)[0]
-        right = np.where(X[:,index] > value)[0]
+        left = np.where(X[:,index] <= value)[0].astype(int)
+        right = np.where(X[:,index] > value)[0].astype(int)
         return left, right
 
     def _compute_entropy(self, label_array):
@@ -174,7 +171,7 @@ class DecisionTree():
             # Avoid division by zero
             if partition_size:
                 # Compute weighted sum of parition impurities by their relative size
-                impurity += impurity_func(label_array[partition.astype(int)]) * (partition_size / total_size)
+                impurity += impurity_func(label_array[partition]) * (partition_size / total_size)
         return impurity
 
     def _mean_absolute_deviation_around_median(self, y):
@@ -258,9 +255,7 @@ class RegressionTree():
 def main():
     ############### Classifiers ###############
     data_train = np.loadtxt('data/svm-train.txt')
-    data_test = np.loadtxt('data/svm-test.txt')
     x_train, y_train = data_train[:, 0:2], data_train[:, 2].reshape(-1, 1)
-    x_test, y_test = data_test[:, 0:2], data_test[:, 2].reshape(-1, 1)
     y_train_label = (y_train > 0).astype(int).reshape(-1, 1)
 
     # Plotting decision regions
@@ -292,9 +287,7 @@ def main():
 
     ############### Regressors ###############
     data_krr_train = np.loadtxt('data/krr-train.txt')
-    data_krr_test = np.loadtxt('data/krr-test.txt')
-    x_krr_train, y_krr_train = data_krr_train[:,0].reshape(-1,1),data_krr_train[:,1].reshape(-1,1)
-    x_krr_test, y_krr_test = data_krr_test[:,0].reshape(-1,1),data_krr_test[:,1].reshape(-1,1)
+    x_krr_train, y_krr_train = data_krr_train[:,0].reshape(-1,1), data_krr_train[:,1].reshape(-1,1)
 
     plot_size = 0.001
     x_range = np.arange(0., 1., plot_size).reshape(-1, 1)

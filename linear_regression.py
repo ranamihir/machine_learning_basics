@@ -19,9 +19,9 @@ def normalize_features(train, test):
     return train_normalized, test_normalized
 
 # Loading the dataset
-print('loading the dataset')
+print('Loading the dataset')
 
-df = pd.read_csv('data.csv', delimiter=',')
+df = pd.read_csv('data/data.csv', delimiter=',')
 X = df.values[:,:-1]
 y = df.values[:,-1]
 

@@ -27,9 +27,11 @@ class kNN():
         return self
 
     def predict(self, X):
-#         distances = cdist(self.X, X, metric='euclidean')
-#         idx = np.argpartition(distances, self.k, axis=0)[:self.k]
+        # Option 1:
+        # distances = cdist(self.X, X, metric='euclidean')
+        # idx = np.argpartition(distances, self.k, axis=0)[:self.k]
 
+        # Option 2:
         distances = np.array([np.sqrt(np.sum((self.X - x)**2, axis=1)) for x in X])
         idx = np.argpartition(distances, self.k, axis=1)[:self.k]
 

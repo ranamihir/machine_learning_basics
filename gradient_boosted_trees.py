@@ -1,5 +1,4 @@
 import numpy as np
-from collections import Counter
 from itertools import product
 from copy import deepcopy
 from decision_trees import ClassificationTree, RegressionTree
@@ -73,8 +72,8 @@ class GradientBoostedTree():
         '''
         predictions = np.zeros(y.shape[0])
         for i in range(self.n_estimators):
-            residuals = self.pseudo_residual_func(y, predictions)
-            self.estimators[i].fit(X, residuals)
+            pseudo_residuals = self.pseudo_residual_func(y, predictions)
+            self.estimators[i].fit(X, pseudo_residuals)
             predictions += self.lr * self.estimators[i].predict(X)
         return self
 
@@ -103,9 +102,7 @@ class GradientBoostedTree():
 def main():
     ############### Classifiers ###############
     data_train = np.loadtxt('data/svm-train.txt')
-    data_test = np.loadtxt('data/svm-test.txt')
     x_train, y_train = data_train[:, 0:2], data_train[:, 2].reshape(-1, 1)
-    x_test, y_test = data_test[:, 0:2], data_test[:, 2].reshape(-1, 1)
     y_train_label = (y_train > 0).astype(int).reshape(-1, 1)
 
     # Plotting decision regions
@@ -138,9 +135,7 @@ def main():
 
     ############### Regressors ###############
     data_krr_train = np.loadtxt('data/krr-train.txt')
-    data_krr_test = np.loadtxt('data/krr-test.txt')
-    x_krr_train, y_krr_train = data_krr_train[:,0].reshape(-1,1),data_krr_train[:,1].reshape(-1,1)
-    x_krr_test, y_krr_test = data_krr_test[:,0].reshape(-1,1),data_krr_test[:,1].reshape(-1,1)
+    x_krr_train, y_krr_train = data_krr_train[:,0].reshape(-1,1), data_krr_train[:,1].reshape(-1,1)
 
     plot_size = 0.001
     x_range = np.arange(0., 1., plot_size).reshape(-1, 1)

@@ -18,10 +18,10 @@ def normalize_features(train, test):
     return train_normalized, test_normalized
 
 print('\rLoading the dataset... ', end='')
-X_train = pd.read_csv('X_train.txt', delimiter=',', header=None)
-X_val = pd.read_csv('X_val.txt', delimiter=',', header=None)
-y_train = np.squeeze(pd.read_csv('y_train.txt', delimiter=',', header=None).values)
-y_val = np.squeeze(pd.read_csv('y_val.txt', delimiter=',', header=None).values)
+X_train = pd.read_csv('data/X_train.txt', delimiter=',', header=None)
+X_val = pd.read_csv('data/X_val.txt', delimiter=',', header=None)
+y_train = np.squeeze(pd.read_csv('data/y_train.txt', delimiter=',', header=None).values)
+y_val = np.squeeze(pd.read_csv('data/y_val.txt', delimiter=',', header=None).values)
 print('Done.')
 
 print("Scaling all to [0, 1]")

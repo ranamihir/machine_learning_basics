@@ -52,12 +52,16 @@ class KMeans():
         :param distances -> (n, k, d) -> (n, k)
         :return labels -> (n,)
         '''
-#         distances = np.array([np.sqrt((X - self.centroids[c])**2) for c in range(self.n_clusters)]).sum(axis=2)
-#         return np.argmin(distances, axis=0)
 
-#         distances = np.sqrt((X - self.centroids[:,np.newaxis,:])**2).sum(axis=2)
-#         return np.argmin(distances, axis=0)
+        # Option 1:
+        # distances = np.array([np.sqrt((X - self.centroids[c])**2) for c in range(self.n_clusters)]).sum(axis=2)
+        # return np.argmin(distances, axis=0)
 
+        # Option 2:
+        # distances = np.sqrt((X - self.centroids[:,np.newaxis,:])**2).sum(axis=2)
+        # return np.argmin(distances, axis=0)
+
+        # Option 3:
         distances = np.sqrt(np.sum((X[:, np.newaxis, :] - self.centroids[np.newaxis, :])**2, axis=2))
         return np.argmin(distances, axis=1)
 
@@ -66,7 +70,7 @@ class KMeans():
 
     def _init_centroids(self, X):
         if self.init == 'random' or 'kmeans++':
-            indices = np.random.choice(range(len(X)), size=k)
+            indices = np.random.choice(range(len(X)), size=self.n_clusters)
             return X[indices]
 
     def _check_init(self):
@@ -85,3 +89,4 @@ ax.cla()
 ax.scatter(X_train[:, 0], X_train[:, 1], c=kmeans.predict(X_train), marker='^', alpha=0.5)
 ax.scatter(X_test[:, 0], X_test[:, 1], c= kmeans.predict(X_test), marker='o', alpha=0.5)
 ax.scatter(kmeans.centroids[:, 0], kmeans.centroids[:, 1], c='black', s=100)
+plt.show()
