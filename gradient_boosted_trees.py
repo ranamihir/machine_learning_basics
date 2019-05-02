@@ -100,6 +100,8 @@ class GradientBoostedTree():
 
 
 def main():
+    np.random.seed(0)
+
     ############### Classifiers ###############
     data_train = np.loadtxt('data/svm-train.txt')
     x_train, y_train = data_train[:, 0:2], data_train[:, 2].reshape(-1, 1)

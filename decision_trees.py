@@ -29,7 +29,23 @@ class DecisionTree():
 
         valid_max_features = ['auto', 'sqrt', None]
         assert isinstance(max_features, int) or max_features in valid_max_features, \
-               'Param "max_features" must either be an integer or one of "{}"'.format(valid_max_features)
+               'Param "max_features" must either be an integer or one of "{}"'\
+               .format(valid_max_features)
+
+        # Splitting criterion function
+        self.criterion_dict = {
+            'entropy': self._compute_entropy,
+            'gini': self._compute_gini,
+            'mse': np.var,
+            'mae': self._mean_absolute_deviation_around_median
+        }
+
+        # Node value prediction function
+        self.leaf_value_estimator_dict = {
+            'mean': np.mean,
+            'median': np.median,
+            'mode': self._most_common_label,
+        }
 
     def get_params(self, deep=True):
         return vars(self)
@@ -48,43 +64,26 @@ class DecisionTree():
         num_instances, num_features = X.shape
         best_index, best_split_value, best_impurity, best_partitions = np.inf, np.inf, np.inf, None
 
-        # Splitting criterion function
-        criterion_dict = {
-            'entropy': self._compute_entropy,
-            'gini': self._compute_gini,
-            'mse': np.var,
-            'mae': self._mean_absolute_deviation_around_median
-        }
-
-        # Node value prediction function
-        leaf_value_estimator_dict = {
-            'mean': np.mean,
-            'median': np.median,
-            'mode': self._most_common_label,
-        }
-
-        criterion = criterion_dict[self.criterion]
-        leaf_value_estimator = leaf_value_estimator_dict[self.leaf_value_estimator]
-
-        num_features = X.shape[1]
         max_features = self._get_max_features(num_features)
-        feature_indices = np.random.choice(range(num_features), size=max_features)
+        feature_indices = np.random.choice(range(num_features), size=max_features, replace=False)
+
+        criterion = self.criterion_dict[self.criterion]
+        leaf_value_estimator = self.leaf_value_estimator_dict[self.leaf_value_estimator]
 
         for feat_index in feature_indices:
-            for row in X:
-                partitions = self._test_split(feat_index, row[feat_index], X)
+            for feat_value in np.unique(X[:,feat_index]):
+                partitions = self._get_partition_indices(feat_index, feat_value, X)
                 impurity = self._compute_impurity(partitions, y, criterion)
                 if impurity < best_impurity:
                     best_index, best_split_value, best_impurity, best_partitions = \
-                    feat_index, row[feat_index], impurity, partitions
+                    feat_index, feat_value, impurity, partitions
 
         self.is_leaf = False
         left_partition, right_partition = best_partitions
-        total_size = left_partition.shape[0] + right_partition.shape[0]
 
         # Check for stopping conditions
-        if (min(left_partition.shape[0], right_partition.shape[0]) < self.min_samples_leaf) or \
-            (total_size < self.min_samples_split)  or (self.depth >= self.max_depth):
+        if (min(len(left_partition), len(right_partition)) < self.min_samples_leaf) or \
+           (num_instances < self.min_samples_split)  or (self.depth >= self.max_depth):
             self.is_leaf = True
             self.value = leaf_value_estimator(y)
             return self
@@ -95,13 +94,15 @@ class DecisionTree():
 
         # Process left child
         self.left = DecisionTree(self.criterion, self.leaf_value_estimator, \
-                                  self.depth+1, self.min_samples_split, self.min_samples_leaf, self.max_depth)
+                                 self.depth+1, self.min_samples_split, \
+                                 self.min_samples_leaf, self.max_features, self.max_depth)
         self.left.fit(X[left_partition], y[left_partition])
 
 
         # Process right child
         self.right = DecisionTree(self.criterion, self.leaf_value_estimator, \
-                                   self.depth+1, self.min_samples_split, self.min_samples_leaf, self.max_depth)
+                                  self.depth+1, self.min_samples_split, \
+                                  self.min_samples_leaf, self.max_features, self.max_depth)
         self.right.fit(X[right_partition], y[right_partition])
 
         return self
@@ -122,7 +123,7 @@ class DecisionTree():
             return self.left._predict_instance(x)
         return self.right._predict_instance(x)
 
-    def _test_split(self, index, value, X):
+    def _get_partition_indices(self, index, value, X):
         left = np.where(X[:,index] <= value)[0].astype(int)
         right = np.where(X[:,index] > value)[0].astype(int)
         return left, right
@@ -134,11 +135,11 @@ class DecisionTree():
         :param label_array: a numpy array of labels shape = (n, 1)
         :return entropy: entropy value
         '''
-        num_labels = label_array.shape[0]
+        partition_size = len(label_array)
         entropy = 0.
         for label in np.unique(label_array):
-            num_label = label_array[label_array==label].shape[0]
-            p_label = num_label/num_labels
+            num_label = len(label_array[label_array==label])
+            p_label = num_label/partition_size
             entropy -= p_label*np.log2(p_label)
         return entropy
 
@@ -149,11 +150,11 @@ class DecisionTree():
         :param label_array: a numpy array of labels shape = (n, 1)
         :return gini: gini index value
         '''
-        num_labels = label_array.shape[0]
+        partition_size = len(label_array)
         gini = 1.
         for label in np.unique(label_array):
-            num_label = label_array[label_array==label].shape[0]
-            p_label = num_label/num_labels
+            num_label = len(label_array[label_array==label])
+            p_label = num_label/partition_size
             gini -= p_label**2
         return gini
 
@@ -162,16 +163,15 @@ class DecisionTree():
         Calculate the impurity for a partitioned dataset
         '''
 
-        # Count all samples at split point
-        total_size = sum([partition.shape[0] for partition in partitions])
         # Sum weighted impurities for each partition
         impurity = 0.
+        total_size = sum([len(partition) for partition in partitions])
         for partition in partitions:
-            partition_size = partition.shape[0]
+            partition_size = len(partition)
             # Avoid division by zero
             if partition_size:
                 # Compute weighted sum of parition impurities by their relative size
-                impurity += impurity_func(label_array[partition]) * (partition_size / total_size)
+                impurity += impurity_func(label_array[partition]) * partition_size / total_size
         return impurity
 
     def _mean_absolute_deviation_around_median(self, y):
@@ -182,15 +182,15 @@ class DecisionTree():
         :return mae
         '''
         median = np.median(y)
-        mae = np.sum(np.abs(y - median))
+        mae = np.mean(np.abs(y - median))
         return mae
 
     def _most_common_label(self, y):
         '''
         Find most common label
         '''
-        label_cnt = Counter(y.reshape(len(y)))
-        label = label_cnt.most_common(1)[0][0]
+        label_count = Counter(y.reshape(len(y)))
+        label = label_count.most_common(1)[0][0]
         return label
 
     def _get_max_features(self, num_features):
@@ -253,10 +253,12 @@ class RegressionTree():
 
 
 def main():
+    np.random.seed(0)
+
     ############### Classifiers ###############
     data_train = np.loadtxt('data/svm-train.txt')
     x_train, y_train = data_train[:, 0:2], data_train[:, 2].reshape(-1, 1)
-    y_train_label = (y_train > 0).astype(int).reshape(-1, 1)
+    y_train_label = (y_train > 0).astype(int).reshape(-1, 1) # Change target to 0-1 label
 
     # Plotting decision regions
     x_min, x_max = x_train[:, 0].min() - 1, x_train[:, 0].max() + 1
@@ -300,7 +302,7 @@ def main():
 
         # Decision Tree Regressor
         dtree = RegressionTree(max_depth=depth, min_samples_split=1, \
-                               criterion='mae', estimator='median')
+                               criterion='mse', estimator='mean')
         dtree.fit(x_krr_train, y_krr_train)
 
         y_predict = dtree.predict(x_range).reshape(-1, 1)
